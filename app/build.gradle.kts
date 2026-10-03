@@ -1,5 +1,12 @@
+import com.android.build.api.artifact.SingleArtifact
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileSystemOperations
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
+import javax.inject.Inject
 
 plugins {
     id("com.android.application")
@@ -25,7 +32,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "nl.neerdael.milkbeat"
+        applicationId = "nl.neerdael.milkbeat.presetreview"
         minSdk = 26
         targetSdk = 36
         versionCode = milkbeatMajor * 1_000_000 + milkbeatMinor * 1_000 + milkbeatPatch
@@ -63,7 +70,7 @@ android {
         create("github") {
             dimension = "version"
             isDefault = true
-            buildConfigField("Boolean", "UPDATER_ENABLED", "true")
+            buildConfigField("Boolean", "UPDATER_ENABLED", "false")
             buildConfigField("String", "DISCORD_APPLICATION_ID", "\"1526515771021328514\"")
         }
         create("foss") {
@@ -353,4 +360,51 @@ ksp {
 
 hilt {
     enableAggregatingTask = true
+}
+
+// The AAR includes the full library; this review branch packages only the frozen ten samples.
+abstract class ReviewPresetAssets : DefaultTask() {
+    @get:InputDirectory
+    abstract val inputAssets: DirectoryProperty
+
+    @get:InputDirectory
+    abstract val reviewAssets: DirectoryProperty
+
+    @get:OutputDirectory
+    abstract val outputAssets: DirectoryProperty
+
+    @get:Inject
+    abstract val fileOperations: FileSystemOperations
+
+    @TaskAction
+    fun selectPresets() {
+        check(
+            reviewAssets
+                .dir("presets")
+                .get()
+                .asFile
+                .listFiles { file -> file.extension == "milk" }
+                ?.size == 10,
+        )
+        fileOperations.sync {
+            from(inputAssets) {
+                exclude("presets/**", "presets.idx", "preset-genres/**")
+            }
+            from(reviewAssets)
+            into(outputAssets)
+        }
+    }
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        val selection =
+            tasks.register<ReviewPresetAssets>("select${variant.name.replaceFirstChar(Char::uppercaseChar)}ReviewPresets") {
+                reviewAssets.set(layout.projectDirectory.dir("src/presetReview/assets"))
+            }
+        variant.artifacts
+            .use(selection)
+            .wiredWithDirectories(ReviewPresetAssets::inputAssets, ReviewPresetAssets::outputAssets)
+            .toTransform(SingleArtifact.ASSETS)
+    }
 }

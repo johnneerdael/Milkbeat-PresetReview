@@ -1,0 +1,65 @@
+{
+  "purpose": "Ten numbered presets for human feedback",
+  "presets": [
+    {
+      "sample": 1,
+      "filename": "Sample 01 - suksma - ed geining hateops - flx evil roam.milk",
+      "original_filename": "suksma - ed geining hateops - flx evil roam.milk",
+      "sha256": "a362c8349da48b6fa8094a7372425a19a93a426b0df1ec2c1bd6b2421124ed40"
+    },
+    {
+      "sample": 2,
+      "filename": "Sample 02 - suksma - yin - 395 - Artificial Inspiration (brainstorming - outward) + martin - elephant mating - shf thanks nz+ SWAEYY!!!!.milk",
+      "original_filename": "suksma - yin - 395 - Artificial Inspiration (brainstorming - outward) + martin - elephant mating - shf thanks nz+ SWAEYY!!!!.milk",
+      "sha256": "d510f6e6c146ac740ab0e6d19f93f0393022005249d8dfdef8957823f82289d4"
+    },
+    {
+      "sample": 3,
+      "filename": "Sample 03 - Martin n AdamFX - Hardcore Mix Collision in Myself Ft - AC .milk",
+      "original_filename": "Martin n AdamFX - Hardcore Mix Collision in Myself Ft - AC .milk",
+      "sha256": "09fa7d991b29e5634cea120256ff9f4e6bc281ac5fcf95c5bdacbbe29298617b"
+    },
+    {
+      "sample": 4,
+      "filename": "Sample 04 - EoS+Phat - I_v2 monks string box.milk",
+      "original_filename": "EoS+Phat - I_v2 monks string box.milk",
+      "sha256": "41b1555a3a5aa4646b41530fcf475c91113ccd8133c9801e4256638e4f823ae7"
+    },
+    {
+      "sample": 5,
+      "filename": "Sample 05 - suksma - neonlithic scrawlz.milk",
+      "original_filename": "suksma - neonlithic scrawlz.milk",
+      "sha256": "cef3c2a0fe0f66f882eb0612534d6c1fd013bf6c142ab9b06c5d376d4b1e3761"
+    },
+    {
+      "sample": 6,
+      "filename": "Sample 06 - shifter - spun sugar - causal mothritis.milk",
+      "original_filename": "shifter - spun sugar - causal mothritis.milk",
+      "sha256": "42249796c0083f3090fe51409c4e2c79e515cb6ee5b61867d7304f866e2edc02"
+    },
+    {
+      "sample": 7,
+      "filename": "Sample 07 - Tripgnosis - Firesticks --- Isosceles edit11.milk",
+      "original_filename": "Tripgnosis - Firesticks --- Isosceles edit11.milk",
+      "sha256": "f19ef30a45280b6ea353cfbe2f4c67dd217afda389eb538bbc16d199e27638d1"
+    },
+    {
+      "sample": 8,
+      "filename": "Sample 08 - signed 'nuph phoaqing death warrants qultre ov ngread.milk",
+      "original_filename": "signed 'nuph phoaqing death warrants qultre ov ngread.milk",
+      "sha256": "8fe1784a25d47cc7acee9ebe1cebf11931bd5db18de611bc079449d91bc16d94"
+    },
+    {
+      "sample": 9,
+      "filename": "Sample 09 - EoS+Phat - I_v2 sides_b.milk",
+      "original_filename": "EoS+Phat - I_v2 sides_b.milk",
+      "sha256": "080273aad1ee64958a4b94ecd8fd04b4d39abc5845c1590df3b52f4c75d6d56b"
+    },
+    {
+      "sample": 10,
+      "filename": "Sample 10 - Rozzor & Esotic - PPL (NWI) Mandala Chill Color Reactive.milk",
+      "original_filename": "Rozzor & Esotic - PPL (NWI) Mandala Chill Color Reactive.milk",
+      "sha256": "b205c635b0115dd37f3c08e7da6104403ff839fffe46c2128b06af1e55df3b4f"
+    }
+  ]
+}

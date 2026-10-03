@@ -1,4 +1,4 @@
-name: Android CI/CD
+name: Preset Review Build
 
 on:
   push:
@@ -19,12 +19,12 @@ permissions:
   contents: read
 
 env:
-  # Certificate of Milkbeat's own release key (not upstream Flow's).
+  # Dedicated certificate for the separately installed preset review app.
   # Installed builds pin this value; an APK signed with anything else cannot
   # be installed as an update. Changing it forces a reinstall.
-  EXPECTED_SIGNER_SHA256: fefb39d0d5f3df3bbbd0b7ccf7fed716a0a13ebd17ac529b0c1a8ec3c1f7a3f8
+  EXPECTED_SIGNER_SHA256: 7de91b0cb5a4b19921db19b1dfd68540f33386af405ed831a2c14992a7189de0
 
-# Milkbeat ships the Android TV build only: the github flavor, whose in-app updater installs these releases.
+# Review builds use the Android TV github flavor with the updater disabled.
 # The foss and nightly variants are not built or published here.
 jobs:
   build:
@@ -165,6 +165,30 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
+      - name: Verify the ten review presets in every APK
+        run: |
+          python3 - <<'PYTHON'
+          import hashlib
+          import json
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          samples = json.loads(Path("app/preset-review-manifest.json").read_text())["presets"]
+          expected = {"assets/presets/" + sample["filename"]: sample["sha256"] for sample in samples}
+          assert len(expected) == 10
+          apks = list(Path("app/build/outputs/apk/github/release").glob("*.apk"))
+          assert apks, "No release APKs produced"
+          for apk in apks:
+              with ZipFile(apk) as archive:
+                  actual = {name for name in archive.namelist() if name.endswith(".milk")}
+                  assert actual == set(expected), f"Unexpected preset library in {apk.name}"
+                  for name, digest in expected.items():
+                      assert hashlib.sha256(archive.read(name)).hexdigest() == digest, name
+                  index = archive.read("assets/presets.idx").decode().splitlines()
+                  assert {"assets/presets/" + row.split("\t")[0] for row in index} == set(expected)
+              print(f"{apk.name}: ten numbered presets, original source hashes verified")
+          PYTHON
+
       # A wrong or missing key is unrecoverable for installed copies, so fail
       # the build rather than publish. Skipped when no keystore was available,
       # e.g. on fork PRs.
@@ -223,7 +247,7 @@ jobs:
             for apk in "${apks[@]}"; do
               bytes=$(stat --format='%s' "$apk")
               size=$(awk -v bytes="$bytes" 'BEGIN { printf "%.2f MiB", bytes / 1048576 }')
-              printf '| `%s` | %s | %s |\n' "$(basename "$apk")" "$size" "$bytes"
+              printf '| %s | %s | %s |\n' "$(basename "$apk")" "$size" "$bytes"
             done
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -255,8 +279,7 @@ jobs:
           compression-level: 0
 
   # Every push to main becomes a versioned GitHub Release (vX.Y.Z), so the newest
-  # signed build is always at releases/latest/download/milkbeat-universal.apk
-  # (Downloader code 7170062).
+  # signed build is always at releases/latest/download/milkbeat-presetreview-universal.apk
   publish-main:
     name: Publish main build
     needs: build
@@ -283,64 +306,37 @@ jobs:
       - name: Rename APKs for release
         run: |
           set -euo pipefail
-          mv dist/app-github-universal-release.apk     dist/milkbeat-universal.apk
-          mv dist/app-github-arm64-v8a-release.apk     dist/milkbeat-arm64-v8a.apk
-          mv dist/app-github-armeabi-v7a-release.apk   dist/milkbeat-armeabi-v7a.apk
-          # Downloader code 4718521 and older links point at the MusicViz-era name; keep serving it.
-          cp dist/milkbeat-universal.apk dist/musicviz-universal.apk
+          mv dist/app-github-universal-release.apk     dist/milkbeat-presetreview-universal.apk
+          mv dist/app-github-arm64-v8a-release.apk     dist/milkbeat-presetreview-arm64-v8a.apk
+          mv dist/app-github-armeabi-v7a-release.apk   dist/milkbeat-presetreview-armeabi-v7a.apk
           cd dist && sha256sum milkbeat*.apk > checksums.txt && cat checksums.txt
 
       - name: Write release notes
         env:
-          REPO: ${{ github.repository }}
-          TAG: v${{ needs.build.outputs.version }}
           CORE: ${{ needs.build.outputs.core_version }}
         run: |
-          set -euo pipefail
-          prev=$(git tag --list 'v*' --sort=-v:refname | head -n 1)
-          [ -n "$prev" ] || prev=$(git tag --list 'build-*' --sort=-v:refname | head -n 1)
-          if [ -n "$prev" ]; then range="$prev..$GITHUB_SHA"; else range="$GITHUB_SHA"; fi
-          latest="https://github.com/$REPO/releases/latest/download"
           {
-            echo "## What's new"
+            echo "Ten presets numbered Sample 01–10 for audience-fit feedback."
             echo
-            git log --no-merges --format='- %s (%h)' -n 50 "$range"
-            echo "- Visualizer engine: [ProjectM-TV core $CORE](https://github.com/johnneerdael/ProjectM-TV/releases/tag/v$CORE)"
+            echo "Installs alongside Milkbeat as Milkbeat Preset Review. Automatic updates are disabled."
             echo
-            echo "## Install on Android TV"
+            echo "ProjectM-TV core: $CORE (latest stable release resolved at build time)."
             echo
-            echo "- **Downloader app:** enter code \`7170062\`"
-            echo "- **Direct link (always the latest):** $latest/milkbeat-universal.apk"
-            echo
-            echo "Per-ABI APKs (\`milkbeat-arm64-v8a.apk\`, \`milkbeat-armeabi-v7a.apk\`) and \`checksums.txt\` are attached below."
-            echo
-            echo "## Plugins"
-            echo
-            echo "Local and SMB music works without plugins. Optional third-party streaming plugins can be added in Settings > Plugins:"
-            echo
-            echo "- **YouTube Music and YouTube:** downloader code \`494\`"
-            echo "- **Beatport** (full-length streaming needs a Beatport streaming subscription): downloader code \`393\`"
-            echo "- **Spotify** (metadata; select YouTube Music for audio): downloader code \`981\`"
-            if [ -n "$prev" ]; then
-              echo
-              echo "**Full changelog:** https://github.com/$REPO/compare/$prev...$TAG"
-            fi
+            echo "Download milkbeat-presetreview-universal.apk below to install."
           } > notes.md
-          cat notes.md
 
       - name: Create Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ needs.build.outputs.version }}
           target_commitish: ${{ github.sha }}
-          name: Milkbeat v${{ needs.build.outputs.version }}
+          name: Milkbeat Preset Review v${{ needs.build.outputs.version }}
           body_path: notes.md
           make_latest: true
           files: |
-            dist/milkbeat-universal.apk
-            dist/milkbeat-arm64-v8a.apk
-            dist/milkbeat-armeabi-v7a.apk
-            dist/musicviz-universal.apk
+            dist/milkbeat-presetreview-universal.apk
+            dist/milkbeat-presetreview-arm64-v8a.apk
+            dist/milkbeat-presetreview-armeabi-v7a.apk
             dist/checksums.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -47,7 +47,7 @@
         android:fullBackupContent="@xml/account_backup_rules"
         android:banner="@drawable/tv_banner"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="@string/preset_review_app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Flow"
@@ -112,7 +112,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="milkbeat" android:host="add-plugin" />
+                <data android:scheme="milkbeat-presetreview" android:host="add-plugin" />
             </intent-filter>
 
             <!-- A playlist file shared from Flow opens here and is imported. -->
